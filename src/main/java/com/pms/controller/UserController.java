@@ -1,14 +1,19 @@
 package com.pms.controller;
 
+import com.pms.Config.ApiResponse;
+import com.pms.Config.JWTGenerator;
+import com.pms.Config.LoginResponse;
 import com.pms.entity.User;
 import com.pms.exception.CustomException;
 import com.pms.exception.ResourceNotFoundException;
 import com.pms.repository.UserRepository;
 import com.pms.service.UserServiceImpl;
-import lombok.Getter;
+import lombok.Data;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,9 +21,10 @@ import java.util.List;
 import static com.pms.exception.CustomException.*;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/auth/user")
 public class UserController {
-
+    @Autowired
+    private JWTGenerator jwt;
     @Autowired
     private UserServiceImpl userService;
 
@@ -43,47 +49,62 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<String> deleteUser(@RequestBody User user) {
+    @DeleteMapping("/delete/{EmployeeId}")
+    public ResponseEntity<ResponseEntity<?>> deleteUser(@PathVariable("EmployeeId") int employeeId) {
         try {
-            userService.deleteUser(user);
-            return ResponseEntity.ok("User deleted successfully.");
+
+            return ResponseEntity.ok().body(userService.deleteUser(employeeId));
+
         } catch (UserNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return null;
         }
     }
 
     @PutMapping("/modify")
-    public ResponseEntity<String> modifyUser(@RequestBody User modifiedUser) throws CustomException.UserNotFoundException {
-        try {
+    public ResponseEntity<User> modifyUser(@RequestBody User user) throws CustomException.UserNotFoundException {
+        {
+            userService.ModifyUser(user);
             // Fetch the existing user by employee ID
-            User existingUser = userService.getUserByEmployeeId(modifiedUser.getEmployeeId());
+//            return new ResponseEntity<>()ResponseEntity.ok(userService.ModifyUser(user));
+            return new ResponseEntity<>(user, HttpStatus.FOUND);
 
-            // Modify the existing user with the provided details
-            existingUser.setEmailAddress(modifiedUser.getEmailAddress());
-            // Update other fields as needed
 
-            // Save the modified user
-            userService.saveUser(existingUser);
-
-            return ResponseEntity.ok("User modified successfully.");
-        } catch (CustomException.InvalidDataException | CustomException.UserAlreadyExistsException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
+//        } catch (CustomException.InvalidDataException | CustomException.UserAlreadyExistsException e) {
+//            return ResponseEntity.badRequest().body(e.getMessage());
+//        }
+        }}
 
 
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
+    public ApiResponse<?> loginUser(@RequestBody LoginRequest loginRequest) {
         try {
-            User user = userService.login(loginRequest.getEmail(), loginRequest.getPassword());
-            return ResponseEntity.ok(user);
+            if(loginRequest.emailAddress == null || loginRequest.emailAddress.isEmpty() ){
+                return new ApiResponse<>("credentials required", null, 101);
+            } else if (loginRequest.getPassword() == null || loginRequest.getPassword().isEmpty()) {
+                return new ApiResponse<>("credentials required", null, 101);
+            }else{
+                User user = userService.login(loginRequest.getEmailAddress());
+                if (!user.getPassword().equals(loginRequest.getPassword())) {
+                    return new ApiResponse<>("Bad credentials", null, HttpStatus.NOT_FOUND.value());
+
+                }else{
+                    //initialize jwt filter and get token
+                    UserDetails userDetails = userService.loadUserByUsername(user.getEmailAddress());
+                    String token = jwt.generateToken(userDetails);
+                    LoginResponse res = new LoginResponse(user, token);
+                    //create a login response to include the token
+                    return new ApiResponse<>("successful", res, 200);
+                }
+            }
+
         } catch (InvalidLoginException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+            return new ApiResponse<>(e.getMessage(), null, HttpStatus.UNAUTHORIZED.value());
         } catch (UserBlockedException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+            return new ApiResponse<>(e.getMessage(), null, HttpStatus.FORBIDDEN.value());
         } catch (UserNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return new ApiResponse<>(e.getMessage(), null, HttpStatus.NOT_FOUND.value());
+        } catch (Exception e){
+            return new ApiResponse<>(e.getMessage(), null, 500);
         }
     }
 
@@ -109,17 +130,11 @@ public class UserController {
         }
     }
 
-    @Getter
+    @Setter
+    @Data
     public static class LoginRequest {
-        private String email;
+        private String emailAddress;
         private String password;
 
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public void setPassword(String password) {
-            this.password = password;
-        }
     }
 }
