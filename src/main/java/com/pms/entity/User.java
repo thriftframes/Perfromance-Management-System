@@ -3,12 +3,18 @@ package com.pms.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Objects;
+import java.util.Set;
+
+@Setter
+@Getter
 
 @Data
 @Entity
-@Table(name = "users")  // You can customize the table name if necessary
+@Table(name = "user")  // You can customize the table name if necessary
 public class User {
 
     @Id
@@ -39,6 +45,7 @@ public class User {
     // Constructors
     public User() {
     }
+//    private Set<Role> roles;
 
     public User(Integer employeeId, String department, String emailAddress, String firstName, String lastName, String jobTitle, String password) {
         this.employeeId = employeeId;
@@ -134,6 +141,7 @@ public class User {
                 ", password='" + password + '\'' +
                 '}';
     }
+
 
 
 }

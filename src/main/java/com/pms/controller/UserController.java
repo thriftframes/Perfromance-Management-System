@@ -5,7 +5,8 @@ import com.pms.exception.CustomException;
 import com.pms.exception.ResourceNotFoundException;
 import com.pms.repository.UserRepository;
 import com.pms.service.UserServiceImpl;
-import lombok.Getter;
+import lombok.Data;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,34 +44,30 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<String> deleteUser(@RequestBody User user) {
+    @DeleteMapping("/delete/{EmployeeId}")
+    public ResponseEntity<ResponseEntity<?>> deleteUser(@PathVariable("EmployeeId") int employeeId) {
         try {
-            userService.deleteUser(user);
-            return ResponseEntity.ok("User deleted successfully.");
+
+                return ResponseEntity.ok().body(userService.deleteUser(employeeId));
+
         } catch (UserNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return null;
         }
     }
 
     @PutMapping("/modify")
-    public ResponseEntity<String> modifyUser(@RequestBody User modifiedUser) throws CustomException.UserNotFoundException {
-        try {
+    public ResponseEntity<User> modifyUser(@RequestBody User user) throws CustomException.UserNotFoundException {
+         {
+             userService.ModifyUser(user);
             // Fetch the existing user by employee ID
-            User existingUser = userService.getUserByEmployeeId(modifiedUser.getEmployeeId());
+//            return new ResponseEntity<>()ResponseEntity.ok(userService.ModifyUser(user));
+            return new ResponseEntity<>(user, HttpStatus.FOUND);
 
-            // Modify the existing user with the provided details
-            existingUser.setEmailAddress(modifiedUser.getEmailAddress());
-            // Update other fields as needed
 
-            // Save the modified user
-            userService.saveUser(existingUser);
-
-            return ResponseEntity.ok("User modified successfully.");
-        } catch (CustomException.InvalidDataException | CustomException.UserAlreadyExistsException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
+//        } catch (CustomException.InvalidDataException | CustomException.UserAlreadyExistsException e) {
+//            return ResponseEntity.badRequest().body(e.getMessage());
+//        }
+    }}
 
 
     @PostMapping("/login")
@@ -109,17 +106,11 @@ public class UserController {
         }
     }
 
-    @Getter
+    @Setter
+    @Data
     public static class LoginRequest {
         private String email;
         private String password;
 
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public void setPassword(String password) {
-            this.password = password;
-        }
     }
 }

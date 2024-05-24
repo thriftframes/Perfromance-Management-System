@@ -5,16 +5,22 @@ import com.pms.exception.CustomException;
 import com.pms.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 // import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Component
 public class UserServiceImpl extends UserService {
 
     @Autowired
     UserRepository userRepository;
+
+    public UserServiceImpl(UserRepository userRepository) {
+        super(userRepository);
+    }
 
     // Uncomment and configure passwordEncoder if needed
     // @Autowired
@@ -23,7 +29,7 @@ public class UserServiceImpl extends UserService {
     @Override
     public void registerUser(User user) throws CustomException.UserAlreadyExistsException, CustomException.InvalidDataException {
         // Validate user data
-        if (userRepository.findByEmail(user.getEmailAddress()).isPresent()) {
+        if (userRepository.findByEmailAddress(user.getEmailAddress()).isPresent()) {
             throw new CustomException.UserAlreadyExistsException("User with this email already exists");
         }
 
@@ -34,7 +40,7 @@ public class UserServiceImpl extends UserService {
 
     @Override
     public User login(String email, String password) throws CustomException.UserNotFoundException, CustomException.InvalidLoginException, CustomException.UserBlockedException {
-        Optional<User> userOptional = userRepository.findByEmail(email);
+        Optional<User> userOptional = userRepository.findByEmailAddress(email);
         if (userOptional.isEmpty()) {
             throw new CustomException.UserNotFoundException("User not found");
         }
@@ -66,7 +72,7 @@ public class UserServiceImpl extends UserService {
 
     @Override
     public void addUser(User user) throws CustomException.UserAlreadyExistsException, CustomException.InvalidDataException {
-        if (userRepository.findByEmail(user.getEmailAddress()).isPresent()) {
+        if (userRepository.findByEmailAddress(user.getEmailAddress()).isPresent()) {
             throw new CustomException.UserAlreadyExistsException("User with this email already exists");
         }
         userRepository.save(user);
@@ -81,7 +87,7 @@ public class UserServiceImpl extends UserService {
 
     @Override
     public User getUserByUsername(String username) throws CustomException.UserNotFoundException {
-        return userRepository.findByEmail(username)
+        return userRepository.findByEmailAddress(username)
                 .orElseThrow(() -> new CustomException.UserNotFoundException("User not found"));
     }
 
@@ -95,7 +101,7 @@ public class UserServiceImpl extends UserService {
 
     @Override
     public User findUserByEmail(String email) throws CustomException.UserNotFoundException {
-        return userRepository.findByEmail(email)
+        return userRepository.findByEmailAddress(email)
                 .orElseThrow(() -> new CustomException.UserNotFoundException("User not found"));
     }
 
@@ -122,11 +128,16 @@ public class UserServiceImpl extends UserService {
     }
 
     @Override
-    public User getUserByEmployeeId(Integer employeeId) {
+    public Optional<User> getUserByEmployeeId(Integer employeeId) {
         return userRepository.findByEmployeeId(employeeId);
     }
 
+
+    public User getUserByEmployeeId() {
+        return null;
+    }
+
     public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
+        return userRepository.findByEmailAddress(email);
     }
 }
