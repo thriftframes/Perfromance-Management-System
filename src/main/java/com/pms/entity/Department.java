@@ -21,11 +21,8 @@ public class Department {
 
     private String name;
 
-    @OneToMany(mappedBy = "department")
-    private Set<User> users;
 
-    @OneToMany(mappedBy = "department")
-    private Set<KPI> kpis;
+
 }
 
 

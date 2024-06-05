@@ -2,21 +2,34 @@ package com.pms.entity;
 
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Objects;
+import java.io.Serializable;
+import java.util.*;
 
 @Data
 @Entity
-@Table(name = "users")  // You can customize the table name if necessary
-public class User {
+@NoArgsConstructor
+@Table(name = "user")  // You can customize the table name if necessary
+public class User implements Serializable, UserDetails {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    @Column(name = "username", nullable = false, unique = true)
+    private String username;
+
     @Column(name = "employee_id", nullable = false, unique = true)
     private Integer employeeId;
 
-    @Column(name = "department", nullable = false)
-    private String department;
+
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "department_id")
+    private Department department;
 
     @Column(name = "email_address", nullable = false, unique = true)
     private String emailAddress;
@@ -33,16 +46,22 @@ public class User {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "blocked")
+    @Column(name = "blocked", nullable = true)
     private boolean blocked;
 
-    // Constructors
-    public User() {
-    }
+
+    @Column(name = "login_attempts", nullable = false)
+    private int loginAttempts = 0;
+
+
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "role_id")
+    private Role role;
+
+//    private Set<Role> roles;
 
     public User(Integer employeeId, String department, String emailAddress, String firstName, String lastName, String jobTitle, String password) {
         this.employeeId = employeeId;
-        this.department = department;
         this.emailAddress = emailAddress;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -50,91 +69,13 @@ public class User {
         this.password = password;
     }
 
-    // Getters and Setters
-    public Integer getEmployeeId() {
-        return employeeId;
-    }
 
-    public void setEmployeeId(Integer employeeId) {
-        this.employeeId = employeeId;
-    }
-
-    public String getDepartment() {
-        return department;
-    }
-
-    public void setDepartment(String department) {
-        this.department = department;
-    }
-
-    public String getEmailAddress() {
-        return emailAddress;
-    }
-
-    public void setEmailAddress(String emailAddress) {
-        this.emailAddress = emailAddress;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getJobTitle() {
-        return jobTitle;
-    }
-
-    public void setJobTitle(String jobTitle) {
-        this.jobTitle = jobTitle;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    // hashCode and equals methods for entity comparison
-    @Override
-    public int hashCode() {
-        return Objects.hash(employeeId);
-    }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-        User user = (User) obj;
-        return Objects.equals(employeeId, user.employeeId);
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        Set<GrantedAuthority> authorities = new HashSet<>();
+        role.getPermissions().forEach(permission ->
+                authorities.add(new SimpleGrantedAuthority(permission.getPermissionName())));
+        return authorities;
     }
-
-    // toString method for debugging purposes
-    @Override
-    public String toString() {
-        return "User{" +
-                "employeeId=" + employeeId +
-                ", department='" + department + '\'' +
-                ", emailAddress='" + emailAddress + '\'' +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", jobTitle='" + jobTitle + '\'' +
-                ", password='" + password + '\'' +
-                '}';
-    }
-
-
 }
-
