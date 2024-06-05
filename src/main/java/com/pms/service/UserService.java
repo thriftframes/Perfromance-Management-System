@@ -2,23 +2,13 @@ package com.pms.service;
 
 import com.pms.entity.User;
 import com.pms.exception.CustomException;
-import com.pms.repository.UserRepository;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 @Service
 public abstract class UserService {
-
-    private final UserRepository userRepository;
-    private ResponseEntity ResponseEntity;
-
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    public abstract User login(String emailAddress) throws CustomException.UserNotFoundException, CustomException.InvalidLoginException, CustomException.UserBlockedException;
+    public abstract User login(String email, String password) throws CustomException.UserNotFoundException, CustomException.InvalidLoginException, CustomException.UserBlockedException;
 
     public abstract void forgotPassword(String email) throws CustomException.UserNotFoundException;
 
@@ -32,7 +22,7 @@ public abstract class UserService {
 
     public abstract void saveUser(User existingUser) throws CustomException.UserAlreadyExistsException, CustomException.InvalidDataException;
 
-    public abstract User findUserByEmailAddress(String email) throws CustomException.UserNotFoundException;
+    public abstract User findUserByEmail(String email) throws CustomException.UserNotFoundException;
 
     public abstract User findUserByEmployeeId(Integer employeeId) throws CustomException.UserNotFoundException;
 
@@ -44,34 +34,5 @@ public abstract class UserService {
 
     public abstract Optional<User> getUser(Integer userId);
 
-    public abstract Optional<User> getUserByEmployeeId(Integer employeeId);
-
-    public ResponseEntity<User> ModifyUser(User user){
-
-        Optional<User> user2 = userRepository.findByEmployeeId(user.getEmployeeId());
-
-        return ResponseEntity.ok().body(userRepository.save(user));
-    }
-    public ResponseEntity<?> deleteUser(int employeeId) throws CustomException.UserNotFoundException {
-        Optional<User> userOptional = userRepository.findByEmployeeId(employeeId);
-        User existingUser = userOptional.get();
-        userRepository.delete(existingUser);
-        return ResponseEntity.ok().build();
-
-    }
-
-    public Optional<User> authenticateUser(String emailAddress, String password) {
-        // Assuming userService is a service class that handles user-related operations (e.g., fetching user details from a database)
-        User user = userRepository.findByEmailAddress(emailAddress);
-
-        if (user != null && user.getClass().equals(password)) {
-            // Passwords match, authentication successful
-            return Optional.ofNullable(user);
-        } else {
-            // Either user not found or password doesn't match
-            return null; // or throw an exception
-        }
-    }
-
-
+    public abstract User getUserByEmployeeId(Integer employeeId);
 }
