@@ -1,4 +1,4 @@
-package com.pms.entity;
-
-public class UserRole {
-}
+//package com.pms.entity;
+//
+//public class UserRole {
+//}
