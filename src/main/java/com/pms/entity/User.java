@@ -8,15 +8,22 @@ import java.util.Objects;
 
 @Data
 @Entity
-@Table(name = "users")  // You can customize the table name if necessary
+@Table(name = "user")  // You can customize the table name if necessary
 public class User {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private long id;
+
     @Column(name = "employee_id", nullable = false, unique = true)
     private Integer employeeId;
 
     @Column(name = "department", nullable = false)
     private String department;
+
+    @Column(name = "username", nullable = false, unique = true)
+    private String username;
 
     @Column(name = "email_address", nullable = false, unique = true)
     private String emailAddress;
@@ -26,6 +33,8 @@ public class User {
 
     @Column(name = "last_name", nullable = false)
     private String lastName;
+
+    Role role;
 
     @Column(name = "job_title", nullable = false)
     private String jobTitle;
