@@ -17,15 +17,9 @@ public class KPI {
 
     private String name;
     private String category;
+    private String department;
     private double value;
-
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinColumn(name = "department_id")
-    private Department department;
-    @Column(name = "changeVsPrevMonth", nullable = false)
     private double changeVsPrevMonth;
-
     private double variance;
-    private double variancePercentage;
     private double target;
 }
