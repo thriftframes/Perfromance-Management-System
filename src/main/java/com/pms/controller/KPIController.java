@@ -15,12 +15,12 @@ public class KPIController {
     @Autowired
     private KPIService kpiService;
 
-    @GetMapping("/getAllKpi")
+    @GetMapping
     public List<KPI> getAllKPIs() {
         return kpiService.getAllKPIs();
     }
 
-    @PostMapping("/createKpi")
+    @PostMapping
     public KPI createKPI(@RequestBody KPI kpi) {
         return kpiService.createKPI(kpi);
     }
